@@ -40,10 +40,9 @@ object WallService {
     //добавлять запись в массив, но при этом назначать посту уникальный среди всех постов идентификатор;
     //возвращать пост с уже выставленным идентификатором.
     fun add(post: Post): Post {
-        post.id = countId + 1;
-        posts += post
+        posts += post.copy(id=++countId)
         //posts.set(countId, post)
-        countId += 1
+        //countId += 1
         return posts.last()
     }
 
