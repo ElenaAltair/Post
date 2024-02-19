@@ -13,8 +13,8 @@ class WallServiceTest {
     @Test
     fun add() {
         val ws = WallService
-        val comment = Comments
-        val like = Likes
+        val comment = Comments()
+        val like = Likes()
         var post = Post(0, 1, 1, "Hello", comment, like, true, true, true, true)
 
         val result: Boolean = ws.add(post).id != 0
@@ -26,8 +26,8 @@ class WallServiceTest {
     @Test
     fun updateIdIsNotNull() {
         val ws = WallService
-        val comment = Comments
-        val like = Likes
+        val comment = Comments()
+        val like = Likes()
         var post = Post(0, 1, 1, "Hello", comment, like, true, true, true, true)
         val id: Int = ws.add(post).id
 
@@ -41,8 +41,8 @@ class WallServiceTest {
     @Test
     fun updateIdIsNull() {
         val ws = WallService
-        val comment = Comments
-        val like = Likes
+        val comment = Comments()
+        val like = Likes()
         var post = Post(0, 1, 1, "Hello", comment, like, true, true, true, true)
         val id: Int = ws.add(post).id
 
