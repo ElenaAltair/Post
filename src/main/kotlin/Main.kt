@@ -45,9 +45,12 @@ class ArrayAttachments() {
 }
 
 data class PhotoAttachment(
-    override val type: String = "photo",
     var photo: Photo
-) : Attachment
+) : Attachment {
+    //Можно перенести описание свойства type в наследниках в тело класса,
+    // чтобы не надо было его задавать при создании экземпляров классов
+    override val type: String = "photo"
+}
 
 data class Photo(
     var id: Int,
@@ -57,9 +60,12 @@ data class Photo(
 )
 
 data class ImageAttachment(
-    override val type: String = "image",
     var image: Image
-) : Attachment
+) : Attachment {
+    //Можно перенести описание свойства type в наследниках в тело класса,
+    // чтобы не надо было его задавать при создании экземпляров классов
+    override val type: String = "image"
+}
 
 data class Image(
     var id: Int,
@@ -70,9 +76,12 @@ data class Image(
 )
 
 data class VideoAttachment(
-    override val type: String = "video",
     var video: Video
-) : Attachment
+) : Attachment {
+    //Можно перенести описание свойства type в наследниках в тело класса,
+    // чтобы не надо было его задавать при создании экземпляров классов
+    override val type: String = "video"
+}
 
 data class Video(
     var id: Int,
@@ -82,9 +91,12 @@ data class Video(
 )
 
 data class AudioAttachment(
-    override val type: String = "audio",
     var audio: Audio
-) : Attachment
+) : Attachment {
+    //Можно перенести описание свойства type в наследниках в тело класса,
+    // чтобы не надо было его задавать при создании экземпляров классов
+    override val type: String = "audio"
+}
 
 data class Audio(
     var id: Int,
@@ -94,9 +106,12 @@ data class Audio(
 )
 
 data class RepostAttachment(
-    override val type: String = "repost",
     var repost: Repost
-) : Attachment
+) : Attachment {
+    //Можно перенести описание свойства type в наследниках в тело класса,
+    // чтобы не надо было его задавать при создании экземпляров классов
+    override val type: String = "repost"
+}
 
 data class Repost(
     var id: Int,
@@ -195,9 +210,9 @@ fun main() {
     ws.add(post2)
 
     val photo1 = Photo(5, 11, "https://qweqeerw", "")
-    val photoAttachment1 = PhotoAttachment("photo", photo1)
+    val photoAttachment1 = PhotoAttachment(photo1)
     val photo2 = Photo(6, 11, "https://qwrw", "")
-    val photoAttachment2 = PhotoAttachment("photo", photo2)
+    val photoAttachment2 = PhotoAttachment(photo2)
     var arrayAttachments1 = ArrayAttachments()
     arrayAttachments1.addAttachment(photoAttachment1)
     arrayAttachments1.addAttachment(photoAttachment2)
