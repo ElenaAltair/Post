@@ -1,3 +1,6 @@
+import java.lang.RuntimeException
+import javax.annotation.processing.Messager
+
 class Comments { // Информация о комментариях к записи, объект с полями
     private var count: Int = 0 //количество комментариев
     private var canPost: Boolean =
@@ -14,6 +17,73 @@ class Comments { // Информация о комментариях к запи
         return count
     }
 }
+
+/*
+Комментарий на стене
+Объект, описывающий комментарии на стене, содержит следующие поля:
+id integer Идентификатор комментария.
+from_id integer Идентификатор автора комментария.
+date integer Дата создания комментария в формате Unixtime.
+text string Текст комментария.
+donut object Информация о VK Donut. Объект со следующими полями:
+• is_don (boolean) — является ли комментатор подписчиком VK Donut.
+• placeholder (string) — заглушка для пользователей, которые не оформили подписку VK Donut.
+reply_to_user integer Идентификатор пользователя или сообщества, в ответ которому оставлен текущий комментарий (если применимо).
+reply_to_comment integer Идентификатор комментария, в ответ на который оставлен текущий (если применимо).
+attachments object Медиавложения комментария (фотографии, ссылки и т.п.). Описание массива attachments находится на отдельной странице.
+parents_stack array Массив идентификаторов родительских комментариев.
+thread object Информация о вложенной ветке комментариев, объект с полями:
+•count (integer) — количество комментариев в ветке.
+•items (array) — массив объектов комментариев к записи (только для метода wall.getComments).
+•can_post (boolean) – может ли текущий пользователь оставлять комментарии в этой ветке.
+•show_reply_button (boolean) – нужно ли отображать кнопку «ответить» в ветке.
+•groups_can_post (boolean) – могут ли сообщества оставлять комментарии в ветке.
+ */
+
+class Donut {
+    private var isDon: Boolean = false // (boolean) — является ли комментатор подписчиком VK Donut.
+    private var placeholder: String =
+        "0" //(string) — заглушка для пользователей, которые не оформили подписку VK Donut.
+}
+
+class ArrayParentsStackComment { //Массив идентификаторов родительских комментариев
+    private var commentsParentsStack = HashSet<Long>()
+    fun addId(id: Long): Long {
+        commentsParentsStack.add(id)
+        return commentsParentsStack.last()
+    }
+}
+
+class ItemsComments { //массив объектов комментариев к записи (только для метода wall.getComments)
+    private var comments = emptyArray<Comment>()
+    private var countId: Long = 0
+    fun add(comment: Comment): Comment {
+        comments += comment.copy(id = ++countId)
+        return comments.last()
+    }
+}
+
+class Thread { //Информация о вложенной ветке комментариев, объект с полями
+    private var count: Long = 0 // (integer) — количество комментариев в ветке.
+
+    //private var items: ItemsComments? = null // (array) — массив объектов комментариев к записи (только для метода wall.getComments).
+    private var canPost: Boolean = true // (boolean) – может ли текущий пользователь оставлять комментарии в этой ветке.
+    private var showReplyButton: Boolean = true // (boolean) – нужно ли отображать кнопку «ответить» в ветке.
+    private var groupsCanPost: Boolean = true // (boolean) – могут ли сообщества оставлять комментарии в ветке.
+}
+
+data class Comment(
+    var id: Long, // integer Идентификатор комментария.
+    var fromId: Long, // integer Идентификатор автора комментария.
+    var date: Long = System.currentTimeMillis(), // integer Дата создания комментария в формате Unixtime.
+    var text: String = "", // string Текст комментария.
+    var donut: Donut,
+    var replyToUser: Long, // integer Идентификатор пользователя или сообщества, в ответ которому оставлен текущий комментарий (если применимо).
+    var replyToComment: Long, // integer Идентификатор комментария, в ответ на который оставлен текущий (если применимо).
+    var arrayAttachments: ArrayAttachments?, // object Медиавложения комментария (фотографии, ссылки и т.п.). Описание массива attachments находится на отдельной странице.
+    var parents_stack: ArrayParentsStackComment?, // array Массив идентификаторов родительских комментариев.
+    var thread: Thread? //Информация о вложенной ветке комментариев, объект с полями
+)
 
 class Likes { //Информация о лайках к записи, объект с полями
     private var count: Int = 0 // число пользователей, которым понравилась запись
@@ -62,8 +132,6 @@ data class Photo(
 data class ImageAttachment(
     var image: Image
 ) : Attachment {
-    //Можно перенести описание свойства type в наследниках в тело класса,
-    // чтобы не надо было его задавать при создании экземпляров классов
     override val type: String = "image"
 }
 
@@ -78,8 +146,6 @@ data class Image(
 data class VideoAttachment(
     var video: Video
 ) : Attachment {
-    //Можно перенести описание свойства type в наследниках в тело класса,
-    // чтобы не надо было его задавать при создании экземпляров классов
     override val type: String = "video"
 }
 
@@ -93,8 +159,6 @@ data class Video(
 data class AudioAttachment(
     var audio: Audio
 ) : Attachment {
-    //Можно перенести описание свойства type в наследниках в тело класса,
-    // чтобы не надо было его задавать при создании экземпляров классов
     override val type: String = "audio"
 }
 
@@ -108,8 +172,6 @@ data class Audio(
 data class RepostAttachment(
     var repost: Repost
 ) : Attachment {
-    //Можно перенести описание свойства type в наследниках в тело класса,
-    // чтобы не надо было его задавать при создании экземпляров классов
     override val type: String = "repost"
 }
 
@@ -120,7 +182,7 @@ data class Repost(
     var linkOwner: String
 )
 
-
+class PostNotFoundException(message: String) : RuntimeException(message)
 object WallService {
     private var posts = emptyArray<Post>()
     private var countId: Int = 0
@@ -153,7 +215,8 @@ object WallService {
                 if (post.text != null && !post.text.equals("")) {
                     var postAnyT: Post = post.copy(
                         ownerId = post.ownerId, fromId = post.ownerId,
-                        text = post.text, comments = post.comments, likes = post.likes,
+                        text = post.text, comments = post.comments, comment = post.comment,
+                        likes = post.likes,
                         canPin = post.canPin, canDelete = post.canDelete, canEdit = post.canEdit,
                         isFavorite = post.isFavorite, arrayAttachments = post.arrayAttachments
                     )
@@ -166,6 +229,32 @@ object WallService {
         return false
     }
 
+
+    fun findById(id: Int): Post? {
+        for (post in posts) {
+            if (post.id == id) {
+                return post
+            }
+        }
+        return null
+    }
+
+    private var comments = emptyArray<Comment>()
+    private var countIdCom: Long = 0
+
+
+    //  внедрим в сервис с постами возможность комментирования
+    fun createComment(postId: Int, comment: Comment): Comment? {
+        val post: Post = findById(postId) ?: throw PostNotFoundException("Пост не найден.")
+
+        post.comments.setCount() //увеличим счетчик комментариев
+        comments += comment.copy(id = ++countIdCom)
+        post.comment = comments
+        //countIdCom++
+        return post.comment!!.last()
+
+    }
+
     fun getPost(): Array<Post> {
         return posts
     }
@@ -174,8 +263,10 @@ object WallService {
     // сли вы хотите оставить WallService в виде object, то можно добавить в него метод очистки clear
     fun clear() {
         posts = emptyArray()
+        comments = emptyArray()
         // также здесь нужно сбросить счетчик для id постов, если он у вас используется
         countId = 0
+        countIdCom = 0
     }
 }
 
@@ -185,6 +276,7 @@ data class Post(
     var fromId: Int, // Идентификатор автора записи
     var text: String?, // Текст записи
     var comments: Comments, // Информация о комментариях к записи, объект с полями
+    var comment: Array<Comment>?, //
     var likes: Likes, // Информация о лайках к записи, объект с полями
     var canPin: Boolean, // Информация о том, может ли текущий пользователь закрепить запись (1 — может, 0 — не может)
     var canDelete: Boolean, // Информация о том, может ли текущий пользователь удалить запись (1 — может, 0 — не может)
@@ -194,20 +286,26 @@ data class Post(
 )
 
 fun main() {
-    val comment1 = Comments()
-    comment1.setCount()
+    val commentCounter1 = Comments()
     val like1 = Likes()
     like1.setCount()
-    var post1 = Post(0, 1, 1, "Hello", comment1, like1, true, true, true, true, null)
 
-    val comment2 = Comments()
-    comment2.setCount()
+
+    var post1 = Post(0, 1, 1, "Hello", commentCounter1, null, like1, true, true, true, true, null)
+
+    val commentCounter2 = Comments()
     val like2 = Likes()
-    var post2 = Post(0, 1, 2, "Hi", comment2, like2, true, true, true, true, null)
+    var post2 = Post(0, 1, 2, "Hi", commentCounter2, null, like2, true, true, true, true, null)
 
     val ws = WallService
     ws.add(post1)
     ws.add(post2)
+
+
+    val donut1 = Donut()
+    val thread1 = Thread()
+    var comment1 = Comment(0, 0, System.currentTimeMillis(), "Комментарий 1", donut1, 0, 0, null, null, thread1)
+    println(ws.createComment(1, comment1))
 
     val photo1 = Photo(5, 11, "https://qweqeerw", "")
     val photoAttachment1 = PhotoAttachment(photo1)
@@ -217,7 +315,7 @@ fun main() {
     arrayAttachments1.addAttachment(photoAttachment1)
     arrayAttachments1.addAttachment(photoAttachment2)
 
-    var post3 = Post(2, 3, 3, "Hi", comment2, like2, true, true, true, true, arrayAttachments1)
+    var post3 = Post(2, 3, 3, "Hi", commentCounter2, null, like2, true, true, true, true, arrayAttachments1)
     ws.update(post3)
 
 
